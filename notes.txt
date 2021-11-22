@@ -1,0 +1,95 @@
+docker build -t localbuild/connect:latest .
+
+
+# Manual postgres debezium
+https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.debezium&a=debezium-connector-postgres&v=LATEST&c=plugin&e=tar.gz
+
+
+
+## MongoDB
+https://docs.mongodb.com/kafka-connector/current/kafka-source/
+
+Change streams, a feature introduced in MongoDB 3.6, generate event documents that contain changes to data stored in MongoDB in real-time and provide guarantees of durability, security, and idempotency. You can configure change streams to observe changes at the collection, database, or deployment level.
+
+
+
+curl -X POST -H "Content-Type: application/json" --data '
+  {"name": "mongo-sink",
+   "config": {
+     "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
+     "tasks.max":"1",
+     "topics":"pageviews",
+     "connection.uri":"mongodb://localhost:27017",
+     "database":"test",
+     "collection":"pageviews",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false"
+}}' http://localhost:8083/connectors -w "\n"
+
+
+
+curl -X POST -H "Content-Type: application/json" --data '
+  {"name": "mongo-source",
+   "config": {
+     "tasks.max":"1",
+     "connector.class":"com.mongodb.kafka.connect.MongoSourceConnector",
+     "connection.uri":"mongodb://localhost:27017",
+     "topic.prefix":"mongo",
+     "database":"test",
+     "collection":"pageviews"
+}}' http://localhost:8083/connectors -w "\n"
+
+
+
+
+
+## Postgres
+
+https://medium.com/event-driven-utopia/configuring-debezium-to-capture-postgresql-changes-with-docker-compose-224742ca5372
+
+
+psql shipment_db -U postgresuser
+
+
+
+CREATE TABLE IF NOT EXISTS shipments
+(
+    shipment_id bigint NOT NULL,
+    order_id bigint NOT NULL,
+    date_created character varying(255) COLLATE pg_catalog."default",
+    status character varying(25) COLLATE pg_catalog."default",
+    CONSTRAINT shipments_pkey PRIMARY KEY (shipment_id)
+);
+
+
+INSERT INTO shipments values (30500,10500,'2021-01-21','COMPLETED');
+INSERT INTO shipments values (31500,11500,'2021-04-21','COMPLETED');
+INSERT INTO shipments values (32500,12500,'2021-05-31','PROCESSING');
+
+
+#test
+INSERT INTO shipments values (30501,10501,'2021-11-21','COMPLETED');
+
+UPDATE shipments SET status = 'PROCESSING' WHERE order_id = 10501;
+
+select * from shipments;
+
+
+
+curl -X POST -H "Content-Type: application/json"  --data '
+{
+  "name": "shipments-connector",  
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector", 
+    "plugin.name": "pgoutput",
+    "database.hostname": "postgres", 
+    "database.port": "5432", 
+    "database.user": "postgresuser", 
+    "database.password": "postgrespw", 
+    "database.dbname" : "shipment_db", 
+    "database.server.name": "postgres", 
+    "table.include.list": "public.shipments",
+    "slot.name" : "myslotname"
+  }
+}' http://localhost:8083/connectors
