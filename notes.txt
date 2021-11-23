@@ -9,8 +9,48 @@ https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.
 ## MongoDB
 https://docs.mongodb.com/kafka-connector/current/kafka-source/
 
+
+--examples mongo https://dev.to/sonyarianto/how-to-spin-mongodb-server-with-docker-and-docker-compose-2lef
+
 Change streams, a feature introduced in MongoDB 3.6, generate event documents that contain changes to data stored in MongoDB in real-time and provide guarantees of durability, security, and idempotency. You can configure change streams to observe changes at the collection, database, or deployment level.
 
+
+mongo admin -u root -p rootpassword
+
+
+
+rs.initiate({
+   _id : "rsmongo",
+   members: [
+       {
+           "_id": 0,
+           "host": "mongodb:27017",
+           "priority": 4
+       },
+       {
+           "_id": 1,
+           "host": "mongodb2:27017",
+           "priority": 2
+       },
+
+   ]
+}); 
+
+
+
+
+
+use mydatabase
+
+db.products.save({"name":"Sony AK", "price": 0.5})
+db.products.save({"name":"LG AA", "price": 1.3})
+
+
+db.products.update({"name" : "Sony AK"}, {$set: { "price" : 3.6}});
+
+db.products.update({"_id" : ObjectId("619b66b298a73684ce957132")}, {$set: { "price" : 3.8}});
+
+db.products.find()
 
 
 curl -X POST -H "Content-Type: application/json" --data '
@@ -19,7 +59,7 @@ curl -X POST -H "Content-Type: application/json" --data '
      "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
      "tasks.max":"1",
      "topics":"pageviews",
-     "connection.uri":"mongodb://localhost:27017",
+     "connection.uri":"mongodb://mongodb:27017",
      "database":"test",
      "collection":"pageviews",
      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -34,10 +74,10 @@ curl -X POST -H "Content-Type: application/json" --data '
    "config": {
      "tasks.max":"1",
      "connector.class":"com.mongodb.kafka.connect.MongoSourceConnector",
-     "connection.uri":"mongodb://localhost:27017",
+     "connection.uri":"mongodb://root:rootpassword@mongodb:27017",
      "topic.prefix":"mongo",
-     "database":"test",
-     "collection":"pageviews"
+     "database":"mydatabase",
+     "collection":"products"
 }}' http://localhost:8083/connectors -w "\n"
 
 
@@ -93,3 +133,11 @@ curl -X POST -H "Content-Type: application/json"  --data '
     "slot.name" : "myslotname"
   }
 }' http://localhost:8083/connectors
+
+
+
+
+
+
+
+API: http://localhost:8080/users?from_id=36
