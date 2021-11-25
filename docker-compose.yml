@@ -40,9 +40,6 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
-    # volumes:
-    # - /home/viniciusgoncalves/tmp/kafka/data:/var/lib/kafka/data
-
   schema-registry:
     image: confluentinc/cp-schema-registry:6.1.1
     hostname: schema-registry
@@ -70,6 +67,7 @@ services:
       - "8083:8083"
       - "8890:8890"
       - "7071:7071"
+      - "49999:49999"
 
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
@@ -95,6 +93,9 @@ services:
       CONNECT_KAFKA_HEAP_OPTS: "-Xms256M -Xmx3G"
       KAFKA_JMX_PORT: 49999
       KAFKA_OPTS: "-javaagent:/opt/kafka/libs/jmx_prometheus_javaagent.jar=7071:/opt/kafka/config/jmx-config.yaml"
+    volumes:
+      - ./kafka-connect-sample/target/components/packages/you-kafka-connect-sample-0.1.0/you-kafka-connect-sample-0.1.0/lib:/usr/share/java/kafka-connect-sample
+      - ./jmx-config.yaml:/opt/kafka/config/jmx-config.yaml
     
 
   control-center:
@@ -116,11 +117,11 @@ services:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
-    volumes:
-      - /home/viniciusgoncalves/tmp/kafka/control-center:/var/lib/confluent-control-center
-
+    
   postgres:
     image: debezium/postgres:13
+    hostname: postgres
+    container_name: postgres
     ports:
       - 5432:5432
     environment:
@@ -131,27 +132,59 @@ services:
     volumes:
       - ./scripts:/docker-entrypoint-initdb.d
 
-  mongodb:
+  mongodb1:
     image: mongo:latest
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    hostname: mongodb1
+    container_name: mongodb1
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: rootpassword
     ports:
       - 27017:27017
-    # volumes:
-    #   - mongodb_data_container:/data/db
     entrypoint: [ "/usr/bin/mongod", "--replSet", "rsmongo", "--bind_ip_all"]
 
   mongodb2:
     image: mongo:latest
+    hostname: mongodb2
+    container_name: mongodb2
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
     ports:
       - 27018:27017
-    # volumes:
-    #   - mongodb_data_container:/data/db
     entrypoint: [ "/usr/bin/mongod", "--replSet", "rsmongo", "--bind_ip_all"]
+
+
+
+  dummy-api:
+    image: localbuild/dummy-api:latest
+    hostname: dummy-api
+    container_name: dummy-api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - 8085:8080
+
+
+  prometheus:
+    image: prom/prometheus:v2.1.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-admin-api'
+    ports:
+      - 9090:9090
+    depends_on:
+      - connect
+    restart: always
+
+
+
 
 
 volumes:

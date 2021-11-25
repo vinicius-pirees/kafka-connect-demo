@@ -1,7 +1,6 @@
 from flask import Flask
 from flask import request
 from flask import json
-from random_word import RandomWords
 import random
 
 
@@ -13,7 +12,6 @@ app = Flask(__name__)
 class User:
     def __init__(self):
         self.current_user_id=0
-        self.r = RandomWords()
         self.names = ['Alexandre','Eduardo','Henrique','Murilo',
                         'Theo','André','Enrico','Henry',
                         'Nathan','Thiago','Antônio','Enzo',

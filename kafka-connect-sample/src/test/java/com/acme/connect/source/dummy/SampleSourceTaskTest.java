@@ -25,7 +25,7 @@ public class SampleSourceTaskTest {
     @Test
     public void checkNumberOfRecords() {
         Map<String, String> connectorProps = new HashMap<>();
-        connectorProps.put(SampleSourceConnectorConfig.URL, "http://localhost:8080");
+        connectorProps.put(SampleSourceConnectorConfig.URL, "http://localhost:8085");
         connectorProps.put(SampleSourceConnectorConfig.DESTINATION_TOPIC_CONFIG, "my-topic");
         connectorProps.put(SampleSourceConnectorConfig.START_ID, "5");
         Map<String, String> taskProps = getTaskProps(connectorProps);

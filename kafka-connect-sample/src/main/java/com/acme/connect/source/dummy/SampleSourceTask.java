@@ -30,6 +30,7 @@ public class SampleSourceTask extends SourceTask {
     private String url;
     private Long fromId;
     private Long startId;
+    private Long currentId;
 
 
 
@@ -97,19 +98,27 @@ public class SampleSourceTask extends SourceTask {
         log.info(numRecords + " records polled!");
 
 
+
+
+
         for (UserSchema user : userRecords) {
 
             try {
+                currentId = user.getId();
                 records.add(new SourceRecord(
                         Collections.singletonMap("table", "dummy"),
-                        buildSourceOffset(fromId+5),
+                        buildSourceOffset(currentId),
                         topic, null, null, null, UserSchema.UserSchemaDef(),
                         user.toStruct()));
+                fromId = currentId;
+
             } catch (Exception e) {
                 log.info(new Gson().toJson(user));
                 e.printStackTrace();
             }
         }
+
+        
 
         return records;
 
