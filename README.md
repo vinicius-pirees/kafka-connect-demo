@@ -2,6 +2,69 @@
 
 Set up:
 ```bash
-$ echo "IP=$(hostname -I | cut -f1 -d' ')" > .env
 $ docker-compose up -d
+```
+
+
+## Connector deployments
+
+Postgres Source connector:
+```bash
+curl -X POST -H "Content-Type: application/json"  --data '
+{
+  "name": "shipments-connector",  
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector", 
+    "plugin.name": "pgoutput",
+    "database.hostname": "postgres", 
+    "database.port": "5432", 
+    "database.user": "postgresuser", 
+    "database.password": "postgrespw", 
+    "database.dbname" : "shipment_db", 
+    "database.server.name": "postgres", 
+    "table.include.list": "public.shipments",
+    "slot.name" : "myslotname"    
+  }
+}' http://localhost:8083/connectors 
+
+```
+
+
+MongoDB Sink connector:
+```bash
+curl -X POST -H "Content-Type: application/json" --data '
+  {"name": "mongo-sink",
+   "config": {
+     "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
+     "tasks.max":"1",
+     "topics":"postgres.public.shipments",
+     "connection.uri":"mongodb://mongodb1:27017",
+     "database":"test",
+     "collection":"shipments",
+     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081"
+	}
+}' http://localhost:8083/connectors 
+
+```
+
+
+Sample Source connector (API):
+```bash
+curl -X POST -H "Content-Type: application/json"  --data '
+{
+  "name" : "dummy-api-source",
+  "config" : {
+    "connector.class": "com.acme.connect.source.dummy.SampleSourceConnector",
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable":"false",
+    "url": "http://dummy-api:8080",
+    "topic": "my-users",
+    "poll.interval.ms": 10000
+  }
+}' http://localhost:8083/connectors 
+
 ```

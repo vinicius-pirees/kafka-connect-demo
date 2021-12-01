@@ -13,10 +13,8 @@ public class SampleSourceConnectorConfig extends AbstractConfig {
         super(CONFIG_DEF, originalProps);
     }
 
-
     public static final String DESTINATION_TOPIC_CONFIG = "topic";
     private static final String DESTINATION_TOPIC_DOC = "Destination topic";
-
 
     public static final String START_ID = "start_id";
     private static final String START_TIME_DOC = "Starting ID";

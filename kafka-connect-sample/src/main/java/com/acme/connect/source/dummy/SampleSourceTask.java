@@ -32,10 +32,6 @@ public class SampleSourceTask extends SourceTask {
     private Long startId;
     private Long currentId;
 
-
-
-
-
     @Override
     public String version() {
         return PropertiesUtil.getConnectorVersion();
@@ -48,8 +44,6 @@ public class SampleSourceTask extends SourceTask {
         topic = config.getString(SampleSourceConnectorConfig.DESTINATION_TOPIC_CONFIG);
         url =  config.getString(SampleSourceConnectorConfig.URL);
         pollInterval = config.getInt(SampleSourceConnectorConfig.POLL_INTERVAL_MILLISECONDS_CONFIG);
-
-
 
         Map<String, Object> persistedMap = null;
         if (context != null && context.offsetStorageReader() != null) {
@@ -71,8 +65,6 @@ public class SampleSourceTask extends SourceTask {
 
     @Override
     public List<SourceRecord> poll() throws InterruptedException {
-        //Thread.sleep(monitorThreadTimeout / 2);
-
         Thread.sleep(pollInterval);
         int numRecords;
         List<SourceRecord> records;
