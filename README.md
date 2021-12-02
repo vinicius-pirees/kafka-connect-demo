@@ -40,12 +40,9 @@ curl -X POST -H "Content-Type: application/json" --data '
      "topics":"postgres.public.shipments",
      "connection.uri":"mongodb://mongodb1:27017",
      "database":"test",
-     "collection":"shipments",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "io.confluent.connect.avro.AvroConverter",
-     "value.converter.schema.registry.url": "http://schema-registry:8081"
-	}
-}' http://localhost:8083/connectors 
+     "collection":"shipments"
+  }
+}' http://localhost:8083/connectors
 
 ```
 
@@ -58,9 +55,6 @@ curl -X POST -H "Content-Type: application/json"  --data '
   "config" : {
     "connector.class": "com.acme.connect.source.dummy.SampleSourceConnector",
     "tasks.max": "1",
-    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-    "value.converter":"org.apache.kafka.connect.json.JsonConverter",
-    "value.converter.schemas.enable":"false",
     "url": "http://dummy-api:8080",
     "topic": "my-users",
     "poll.interval.ms": 10000
